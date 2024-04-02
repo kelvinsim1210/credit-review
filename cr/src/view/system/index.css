@@ -1,0 +1,32 @@
+li:hover {
+    background-color: #90bdeb88;
+}
+#menu_now {
+    background-color: #90bdeb88;
+}
+table {
+    position: absolute;
+    left: 50%;
+    transform: translate(-50%,0);
+    width: 60%;
+    border: 1px solid #000;
+    border-collapse: collapse;
+}
+tr {
+    height: 30px;
+}
+td {
+    border: 1px solid #000;
+}
+#new_user {
+    margin: 10px;
+    width: 50%;
+    height: 30px;
+    font-size: 18px;
+    background-color: lightblue;
+    border: 0.5px solid blue;
+}
+#go_home {
+    position: absolute;
+    left: 0;
+}

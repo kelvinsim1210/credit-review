@@ -1,0 +1,1 @@
+general_course --> 通識課程

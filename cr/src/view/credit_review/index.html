@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>學分審核</title>
+
+    <link rel="stylesheet" href="../css/default.css">
+    <link rel="stylesheet" href="index.css">
+</head>
+<body>
+    <div id="main">
+        <!-- 功能按鈕 -->
+        <div id="menu" v-if="ui!='login' && user_now.id!=''">
+            <ul>
+                <li v-for="(value,key) in menu" :id="menu_now==key ? 'menu_now':''">
+                    <a :href="key==menu_now ? '':'../'+key">{{ value }}</a>
+                </li>
+            </ul>
+        </div>
+
+        <!-- 首頁 -->
+        <div class="main" id="home" v-if="ui=='home'">
+            <div class="department_customized">
+                <div>
+                    <label>查看系所: </label>
+                    <select id="use_department" v-model="credit_review_data.department">
+                        <option v-for="(value,key) in all_department">{{ value }}</option>
+                    </select>
+                </div>
+                <div>
+                    <label>查看學年: </label>
+                    <input type="text" v-model="credit_review_data.year">
+                </div>
+                <div>
+                    <label>修課記錄: </label>
+                    <textarea type="text" v-model="credit_review_data.course_records"></textarea>
+                </div>
+            </div>
+            <button @click="get_credit_review">查看</button>
+            <hr>
+        </div>
+
+        <!-- 電機係需求 -->
+        <div class="main" v-if="show==true">
+            <div class="department_customized" v-if="credit_review_data.department=='電機系,23'">
+                <table id="see_unclear">
+                    <!-- 共同必修 -->
+                    <tr>
+                        <td style="color:red;">共同必修尚缺</td>
+                        <td>
+                            <template v-for="(value,key) in no_共同必修">
+                                <template v-if="value!=0">{{ value }}<br></template>
+                            </template>
+                        </td>
+                    </tr>
+
+                    <!-- 必修欠缺 -->
+                    <tr v-for="(value,key) in result_credit_review.no_compulsory">
+                        <td :rowspan="result_credit_review.no_compulsory.length" v-if="key==0" style="color:red;">尚缺必修</td>
+                        <td colspan="5">{{ value[1] +" "+ value[2] +" "+ value[5] +"學分" }}</td>
+                    </tr>
+
+                    <!-- 選修欠缺 -->
+                    <template v-if="result_credit_review.special_elective.length==0">
+                        <tr v-if="elective_course < result_credit_review.course_rule.elective">
+                            <td style="color:red;">尚缺選修學分</td>
+                            <td>{{ result_credit_review.course_rule.elective - elective_course }}（包含第二外語）</td>
+                        </tr>
+                    </template>
+                    <template v-else>
+                        <tr v-if="result_credit_review.course_rule.elective - elective_course - result_credit_review.special_elective[0][1].split('學分')[0] >0">
+                            <td style="color:red;">尚缺選修學分</td>
+                            <td>{{ result_credit_review.course_rule.elective - elective_course - result_credit_review.special_elective[0][1].split('學分')[0] }}</td>
+                        </tr>
+                    </template>
+                    
+                    <!-- 第二外語 -->
+                    <tr v-if="result_credit_review.special_elective.length==0">
+                        <td style="color:red;">未通過第二外語</td>
+                        <td>請補修第二外語</td>
+                    </tr>
+
+                    <!-- 通識 -->
+                    <!-- 特色 -->
+                    <tr v-if="cr_general.re_all_course[0]<result_credit_review.course_rule.feature">
+                        <td style="color:red;">特色通識領域尚缺學分</td>
+                        <td>{{ result_credit_review.course_rule.feature - cr_general.re_all_course[0] }}</td>
+                    </tr>
+                    <tr v-if="(cr_general.re_num[0]!=0 ? 1:0) + (cr_general.re_num[1]!=0 ? 1:0) + (cr_general.re_num[2]!=0 ? 1:0)<(result_credit_review.course_rule.limit==true ? 2:1)">
+                        <td style="color:red;">特色通識領域尚缺次領域</td>
+                        <td>
+                            {{ cr_general.re_num[0]==0 ? '特色通識-國際連接（東南亞）':'' }}<br v-if="cr_general.re_num[0]==0">
+                            {{ cr_general.re_num[1]==0 ? '特色通識-淨零永續（綠概念）':'' }}<br v-if="cr_general.re_num[1]==0">
+                            {{ cr_general.re_num[2]==0 ? '特色通識-社會創新（在地實踐）':'' }}<br v-if="cr_general.re_num[2]==0">
+                            擇{{ (result_credit_review.course_rule.limit==true ? 2:1) - ((cr_general.re_num[0]!=0 ? 1:0) + (cr_general.re_num[1]!=0 ? 1:0) + (cr_general.re_num[2]!=0 ? 1:0)) }}
+                        </td>
+                    </tr>
+                    <!-- 自然 -->
+                    <tr v-if="cr_general.re_all_course[3]<result_credit_review.course_rule.nature">
+                        <td style="color:red;">自然通識領域尚缺學分</td>
+                        <td>{{ result_credit_review.course_rule.nature - cr_general.re_all_course[3] }}</td>
+                    </tr>
+                    <tr v-if="(cr_general.re_num[7]!=0 ? 1:0) + (cr_general.re_num[8]!=0 ? 1:0)<(result_credit_review.course_rule.limit==true ? 2:1)">
+                        <td style="color:red;">自然通識領域尚缺次領域</td>
+                        <td>
+                            {{ cr_general.re_num[7]==0 ? '自然-生命與科學':'' }}<br v-if="cr_general.re_num[7]==0">
+                            {{ cr_general.re_num[8]==0 ? '自然-工程與科技':'' }}
+                        </td>
+                    </tr>
+                    <!-- 社會 -->
+                    <tr v-if="cr_general.re_all_course[2]<result_credit_review.course_rule.society">
+                        <td style="color:red;">社會通識領域尚缺學分</td>
+                        <td>{{ result_credit_review.course_rule.society - cr_general.re_all_course[2] }}</td>
+                    </tr>
+                    <tr v-if="(cr_general.re_num[5]!=0 ? 1:0) + (cr_general.re_num[6]!=0 ? 1:0)<(result_credit_review.course_rule.limit==true ? 2:1)">
+                        <td style="color:red;">社會通識領域尚缺次領域</td>
+                        <td>
+                            {{ cr_general.re_num[5]==0 ? '社會-社經與管理':'' }}<br v-if="cr_general.re_num[5]==0">
+                            {{ cr_general.re_num[6]==0 ? '社會-法政與教育':'' }}
+                        </td>
+                    </tr>
+                    <!-- 人文 -->
+                    <tr v-if="cr_general.re_all_course[1]<result_credit_review.course_rule.humanities">
+                        <td style="color:red;">人文通識領域尚缺學分</td>
+                        <td>{{ result_credit_review.course_rule.humanities - cr_general.re_all_course[1] }}</td>
+                    </tr>
+                    <tr v-if="(cr_general.re_num[3]!=0 ? 1:0) + (cr_general.re_num[4]!=0 ? 1:0)<(result_credit_review.course_rule.limit==true ? 2:1)">
+                        <td style="color:red;">人文通識領域尚缺次領域</td>
+                        <td>
+                            {{ cr_general.re_num[3]==0 ? '人文-文學與藝術':'' }}<br v-if="cr_general.re_num[3]==0">
+                            {{ cr_general.re_num[4]==0 ? '人文-歷史哲學與文化':'' }}
+                        </td>
+                    </tr>
+
+                    <!-- 自由學分 -->
+                    <tr v-if="free_course < result_credit_review.course_rule.free">
+                        <td style="color:red;">自由學分尚缺</td>
+                        <td>{{ result_credit_review.course_rule.free - free_course }}</td>
+                    </tr>
+
+                    <!-- 通識講座 -->
+                    <tr v-if="result_credit_review.通識講座.length<6">
+                        <td style="color:red;">通識講座尚缺</td>
+                        <td>{{ 6-result_credit_review.通識講座.length }}</td>
+                    </tr>
+
+                    <!-- 英文畢業門檻 -->
+                    <tr v-if="!result_credit_review.英文能力_課程 && !result_credit_review.英文能力">
+                        <td style="color:red;">英文畢業門檻尚缺</td>
+                        <td>牛津線上分級測驗 / 其他可抵免之英文分級測驗</td>
+                    </tr>
+                </table>
+            </div>
+            <hr>
+        </div>
+
+        <!-- 學分檢核表 -->
+        <div class="main">
+            <div class="department_customized">
+                <table id="cr_table" v-if="credit_review_data.department=='電機系,23'">
+                    <thead>
+                        <tr>
+                            <th colspan="6">國立暨南國際大學 電機系 <br> 畢業學分學生自我檢核表</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- 基本資料 -->
+                        <tr>
+                            <td class="b">姓名</td>
+                            <td>{{ result_credit_review.姓名 }}</td>
+                            <td class="b">學年</td>
+                            <td>{{ credit_review_data.year }}</td>
+                            <td class="b">目前已修習學分數</td>
+                            <td>{{ result_credit_review.目前已修習學分數 }}</td>
+                        </tr>
+
+                        <!-- 共同必修 -->
+                        <template v-if="result_credit_review.共同必修!=undefined">
+                            <tr v-for="(value,key) in result_credit_review.共同必修">
+                                <td :rowspan="result_credit_review.共同必修.length" v-if="key==0" style="border-top:3px solid #484891;">
+                                    共同必修<br>
+                                    {{ 共同必修_course }}/{{ 15 }}
+                                </td>
+                                <td colspan="5" :style="key==0 ? 'border-top:3px solid #484891;':''">{{ value[0] +" "+ value[4] +" "+ value[1]}}</td>
+                            </tr>
+                        </template>
+                        <tr v-else>
+                            <td style="border-top:3px solid #484891;">共同必修<br>0/6</td>
+                            <td colspan="5" style="border-top:3px solid #484891;"></td>
+                        </tr>
+
+                        <!-- 通識 -->
+                        <template v-for="(value,key,index) in result_credit_review.general">
+                            <template v-for="(value2,key2,index2) in value">
+                                <template v-for="(value3,key3) in value2">
+                                    <tr>
+                                        <td :rowspan="cr_general.all_num" v-if="index==0 && index2==0 && key3==0">通識領域課程</td>
+                                        <!-- 主領域學分 -->
+                                        <td :rowspan="cr_general.人文_num" v-if="key=='人文' && index2==0 && key3==0">
+                                            人文學分：<br>
+                                            {{ cr_general.re_all_course[1] }}/{{ result_credit_review.course_rule.humanities }}
+                                        </td>
+                                        <td :rowspan="cr_general.社會_num" v-if="key=='社會' && index2==0 && key3==0">
+                                            社會學分：<br>
+                                            {{ cr_general.re_all_course[2] }}/{{ result_credit_review.course_rule.society }}
+                                        </td>
+                                        <td :rowspan="cr_general.自然_num" v-if="key=='自然' && index2==0 && key3==0">
+                                            自然學分：<br>
+                                            {{ cr_general.re_all_course[3] }}/{{ result_credit_review.course_rule.nature }}
+                                        </td>
+                                        <td :rowspan="cr_general.特色通識_num" v-if="key=='特色通識' && index2==0 && key3==0">
+                                            特色通識學分：<br>
+                                            {{ cr_general.re_all_course[0] }}/{{ result_credit_review.course_rule.feature }}
+                                        </td>
+                                        <!-- 次領域數量 -->
+                                        <td :rowspan="cr_general.人文_num" v-if="key=='人文' && index2==0 && key3==0">
+                                            人文領域：<br>
+                                            {{ (cr_general.re_num[3]!=0 ? 1:0) + (cr_general.re_num[4]!=0 ? 1:0) }}/{{ result_credit_review.course_rule.limit==true ? 2:1 }}
+                                        </td>
+                                        <td :rowspan="cr_general.社會_num" v-if="key=='社會' && index2==0 && key3==0">
+                                            社會領域：<br>
+                                            {{ (cr_general.re_num[5]!=0 ? 1:0) + (cr_general.re_num[6]!=0 ? 1:0) }}/{{ result_credit_review.course_rule.limit==true ? 2:1 }}
+                                        </td>
+                                        <td :rowspan="cr_general.自然_num" v-if="key=='自然' && index2==0 && key3==0">
+                                            自然領域：<br>
+                                            {{ (cr_general.re_num[7]!=0 ? 1:0) + (cr_general.re_num[8]!=0 ? 1:0) }}/{{ result_credit_review.course_rule.limit==true ? 2:1 }}
+                                        </td>
+                                        <td :rowspan="cr_general.特色通識_num" v-if="key=='特色通識' && index2==0 && key3==0">
+                                            特色通識領域：<br>
+                                            {{ (cr_general.re_num[0]!=0 ? 1:0) + (cr_general.re_num[1]!=0 ? 1:0) + (cr_general.re_num[2]!=0 ? 1:0) }}/{{ result_credit_review.course_rule.limit==true ? 2:1 }}
+                                        </td>
+                                        <!-- 次領域 -->
+                                        <td :rowspan="cr_general.re_num[0]==0 ? 1:cr_general.re_num[0]" v-if="key2=='特色通識-國際連接（東南亞）' & key3==0">特色通識-國際連接（東南亞）</td>
+                                        <td :rowspan="cr_general.re_num[1]==0 ? 1:cr_general.re_num[1]" v-if="key2=='特色通識-淨零永續（綠概念）' && key3==0">特色通識-淨零永續（綠概念）</td>
+                                        <td :rowspan="cr_general.re_num[2]==0 ? 1:cr_general.re_num[2]" v-if="key2=='特色通識-社會創新（在地實踐）' && key3==0">特色通識-社會創新（在地實踐）</td>
+                                        <td :rowspan="cr_general.re_num[3]==0 ? 1:cr_general.re_num[3]" v-if="key2=='人文-文學與藝術' && key3==0">人文-文學與藝術</td>
+                                        <td :rowspan="cr_general.re_num[4]==0 ? 1:cr_general.re_num[4]" v-if="key2=='人文-歷史哲學與文化' && key3==0">人文-歷史哲學與文化</td>
+                                        <td :rowspan="cr_general.re_num[5]==0 ? 1:cr_general.re_num[5]" v-if="key2=='社會-社經與管理' && key3==0">社會-社經與管理</td>
+                                        <td :rowspan="cr_general.re_num[6]==0 ? 1:cr_general.re_num[6]" v-if="key2=='社會-法政與教育' && key3==0">社會-法政與教育</td>
+                                        <td :rowspan="cr_general.re_num[7]==0 ? 1:cr_general.re_num[7]" v-if="key2=='自然-生命與科學' && key3==0">自然-生命與科學</td>
+                                        <td :rowspan="cr_general.re_num[8]==0 ? 1:cr_general.re_num[8]" v-if="key2=='自然-工程與科技' && key3==0">自然-工程與科技</td>
+                                        <td colspan="2">{{value3[0]!=undefined ? value3[0] +" "+ value3[4] +" "+ value3[1]:'' }}</td>
+                                    </tr>
+                                </template>
+                            </template>
+                        </template>
+
+                        <!-- 已過必修 -->
+                        <tr v-for="(value,key) in result_credit_review.compulsory">
+                            <td :rowspan="result_credit_review.compulsory.length" v-if="key==0" style="border-top:3px solid #484891;">已通過必修</td>
+                            <td colspan="5" :style="key==0 ? 'border-top:3px solid #484891;':''">{{ value[0] +" "+ value[4] +" "+ value[1] }}</td>
+                        </tr>
+
+                        <!-- 未過必修 -->
+                        <tr v-for="(value,key) in result_credit_review.no_compulsory">
+                            <td :rowspan="result_credit_review.no_compulsory.length" v-if="key==0" style="color:red; border-top:3px solid #484891;">未通過必修</td>
+                            <td colspan="5" :style="key==0 ? 'border-top:3px solid #484891;':''">{{ value[1] +" "+ value[2] +" "+ value[5] +"學分" }}</td>
+                        </tr>
+
+                        <!-- 已過選修 -->
+                        <tr v-for="(value,key) in result_credit_review.elective">
+                            <td :rowspan="result_credit_review.elective.length" v-if="key==0" style="border-top:3px solid #484891;">
+                                已通過選修<br>
+                                {{ elective_course }}/{{ result_credit_review.course_rule.elective }}
+                            </td>
+                            <td colspan="5" :style="key==0 ? 'border-top:3px solid #484891;':''">{{ value[0] +" "+ value[4] +" "+ value[1] }}</td>
+                        </tr>
+
+                        <!-- 已過第二外語 -->
+                        <tr v-for="(value,key) in result_credit_review.special_elective">
+                            <td :rowspan="result_credit_review.special_elective.length" v-if="key==0" style="border-top:3px solid #484891;">
+                                已通過第二外語
+                            </td>
+                            <td colspan="5" :style="key==0 ? 'border-top:3px solid #484891;':''">{{ value[0] +" "+ value[4] +" "+ value[1] }}</td>
+                        </tr>
+
+                        <!-- 其他 -->
+                        <tr v-for="(value,key) in result_credit_review.free">
+                            <td :rowspan="result_credit_review.free.length" v-if="key==0" style="border-top:3px solid #484891;">其他課程</td>
+                            <td colspan="5" :style="key==0 ? 'border-top:3px solid #484891;':''">{{ value[0] +" "+ value[4] +" "+ value[1] }}</td>
+                        </tr>
+
+                        <!-- 通識講座 -->
+                        <template v-if="result_credit_review.通識講座!=undefined">
+                            <tr v-for="(value,key) in result_credit_review.通識講座">
+                                <td :rowspan="result_credit_review.通識講座.length" v-if="key==0" style="border-top:3px solid #484891;">
+                                    通識講座<br>
+                                    {{ result_credit_review.通識講座.length }}/{{ 6 }}
+                                </td>
+                                <td colspan="5" :style="key==0 ? 'border-top:3px solid #484891;':''">{{ value }}</td>
+                            </tr>
+                        </template>
+                        <tr v-else>
+                            <td style="border-top:3px solid #484891;">通識講座<br>0/6</td>
+                            <td colspan="5" style="border-top:3px solid #484891;"></td>
+                        </tr>
+
+                        <!-- 英文畢業門檻 -->
+                        <tr>
+                            <td style="height: 50px;border-top:3px solid #484891;">英文畢業門檻</td>
+                            <template v-if="result_credit_review.英文能力_課程">
+                                <td colspan="5" style="border-top:3px solid #484891;">
+                                    <template v-for="(value,key) in result_credit_review.英文能力_課程">
+                                        {{ value[0] +" "+ value[4] +" "+ value[1] }} <br>
+                                    </template>
+                                    <template v-if="result_credit_review.英文能力">
+                                        {{ result_credit_review.英文能力[0] }}
+                                    </template>
+                                </td>
+                            </template>
+                            <template v-else-if="result_credit_review.英文能力">
+                                <td colspan="5" style="border-top:3px solid #484891;">{{ result_credit_review.英文能力[0] }}</td>
+                            </template>
+                            <td v-else colspan="5" style="border-top:3px solid #484891;"></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- js -->
+    <script src="../../../node_modules/vue/dist/vue.js"></script>
+    <script src="index.js"></script>
+    
+</body>
+</html>

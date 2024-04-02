@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>課程管理</title>
+
+    <link rel="stylesheet" href="../css/default.css">
+    <link rel="stylesheet" href="index.css">
+</head>
+<body>
+    <div id="main">
+        <!-- 功能按鈕 -->
+        <div id="menu" v-if="ui!='login'">
+            <ul>
+                <li v-for="(value,key) in menu" :id="menu_now==key ? 'menu_now':''">
+                    <a :href="key==menu_now ? '':'../'+key">{{ value }}</a>
+                </li>
+            </ul>
+        </div>
+
+        <!-- 首頁 -->
+        <div class="main" id="home" v-if="ui=='home'">
+            <button @click="change_ui('edit_course')" style="position: absolute; left: 0;">修改課程</button>
+            <button @click="logout" style="position: absolute; right: 0;">登出</button>
+            <div id="box1">
+                <h1 style="margin-bottom: 20px;">{{ user_now.department.split(",")[0] }}</h1>
+                <label for="check_year">查看學期: </label>
+                <input type="text" v-model="check_year">
+                <button @click="get_course_list">查看</button>
+            </div>
+
+            <!-- 必修 -->
+            <table id="compulsory">
+                <thead>
+                    <tr>
+                        <th colspan="4">必修課程</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td v-for="(value, key) in course_tittle" :style="key==1 ? {width:'70%'}:{}">{{ value }}</td>
+                    </tr>
+                    <tr v-for="value in course_list['compulsory']">
+                        <td>{{ value[1] }}</td>
+                        <td>{{ value[2] }}</td>
+                        <td>{{ value[5] }}</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <!-- 電機系 -->
+            <div class="department_customized" v-if="user_now.department=='電機系,23'">
+                <!-- 選修 -->
+                <table id="elective">
+                    <thead>
+                        <tr>
+                            <th colspan="4">選修課程</th>        
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td v-for="(value, key) in course_tittle" :style="key==1 ? {width:'70%'}:{}">{{ value }}</td>
+                        </tr>
+                        <tr v-for="value in course_list['elective']">
+                            <td>{{ value[1] }}</td>
+                            <td>{{ value[2] }}</td>
+                            <td>{{ value[5] }}</td>
+                        </tr>
+                    </tbody>
+                </table>
+    
+                <!-- 第二外語 -->
+                <table id="special_elective">
+                    <thead>
+                        <tr>
+                            <th colspan="4">特殊選修課程</th>
+                        </tr>
+                        <tr><td class="annotation"  colspan="4">第二外語，固定要修一堂抵免選修</td></tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td v-for="(value, key) in course_tittle" :style="key==1 ? {width:'70%'}:{}">{{ value }}</td>
+                        </tr>
+                        <tr v-for="value in course_list['special_elective']">
+                            <td>{{ value[1] }}</td>
+                            <td>{{ value[2] }}</td>
+                            <td>{{ value[5] }}</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- 通識 -->
+            <table id="general">
+                <thead>
+                    <tr>
+                        <th colspan="4">通識</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td v-for="(value, key) in course_tittle" :style="key==1 ? {width:'70%'}:{}">{{ value }}</td>
+                    </tr>
+                    <!-- <tr v-for="(value,key) in course_list['general']">
+                        <td v-for="value2 in value">{{ value2[2] }}</td>
+                    </tr> -->
+                    <template v-for="(value, key) in course_list['general']">
+                        <tr style="background-color: lightcyan;">
+                            <td colspan="4">{{ general_name[key] }}</td>
+                        </tr>
+                        <tr v-for="item in value">
+                            <td>{{ item[1] }}</td>
+                            <td>{{ item[2] }}</td>
+                            <td>{{ item[5] }}</td>
+                        </tr>
+                        <tr></tr>
+                    </template>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- 修改課程 -->
+        <div class="main" id="edit_course" v-if="ui=='edit_course'">
+            <button @click="change_ui('home')" style="position: absolute; left: 0;">返回</button>
+            <button @click="logout" style="position: absolute; right: 0;">登出</button>
+            <div id="box1">
+                <h1 style="margin-bottom: 20px;">{{ user_now.department.split(",")[0] }}</h1>
+                <label for="check_year">修正學期: </label>
+                <input type="text" v-model="check_year">
+            </div>
+
+            <!-- 通用 -->
+            <div class="department_customized">    
+                <label class="tittle">本系必選修</label> <br>
+                <textarea v-model="all_course.my_course"></textarea>
+                <hr/>
+            </div>
+
+            <!-- 電機系客製 -->
+            <div class="department_customized" v-if="user_now.department=='電機系,23'">
+                <label class="tittle">附加選修</label> <br>
+                <textarea v-model="all_course.elective"></textarea>
+                <hr/>
+
+                <label class="tittle">選修抵免</label> <br>
+                <p class="annotation">第二外語，固定要修一堂抵免選修</p>
+                <textarea v-model="all_course.special_elective"></textarea>
+                <hr/>
+            </div>
+
+            <!-- 通識 -->
+            <div class="department_customized">
+                <label class="tittle">特色通識-社會創新（在地實踐）</label> <br>
+                <textarea v-model="all_course.general.local_practice"></textarea>
+                <hr/>
+
+                <label class="tittle">特色通識-淨零永續（綠概念）</label> <br>
+                <textarea v-model="all_course.general.green_concept"></textarea>
+                <hr/>
+                
+                <label class="tittle">特色通識-國際連接（東南亞）</label> <br>
+                <textarea v-model="all_course.general.southeast_asia"></textarea>
+                <hr/>
+
+                <label class="tittle">自然-生命與科學</label> <br>
+                <textarea v-model="all_course.general.life_science"></textarea>
+                <hr/>
+
+                <label class="tittle">自然-工程與科技</label> <br>
+                <textarea v-model="all_course.general.engineering_technology"></textarea>
+                <hr/>
+
+                <label class="tittle">社會-社經與管理</label> <br>
+                <textarea v-model="all_course.general.social_economics_management"></textarea>
+                <hr/>
+
+                <label class="tittle">社會-法政與教育</label> <br>
+                <textarea v-model="all_course.general.law_education"></textarea>
+                <hr/>
+
+                <label class="tittle">人文-歷史哲學與文化</label> <br>
+                <textarea v-model="all_course.general.history_philosophy_culture"></textarea>
+                <hr/>
+
+                <label class="tittle">人文-文學與藝術</label> <br>
+                <textarea v-model="all_course.general.literature_art"></textarea>
+                <hr/>
+            </div>
+
+            <button @click="update_course" id="update_course">提交</button>
+        </div>
+    </div>
+
+    <!-- js -->
+    <script src="../../../node_modules/vue/dist/vue.js"></script>
+    <script src="index.js"></script>
+    
+</body>
+</html>

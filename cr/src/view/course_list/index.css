@@ -1,0 +1,51 @@
+li:hover {
+    background-color: #90bdeb88;
+}
+#menu_now {
+    background-color: #90bdeb88;
+}
+table {
+    margin-bottom: 20px;
+    width: 80%;
+    border: 1px solid #000;
+    border-collapse: collapse;
+}
+tr {
+    height: 30px;
+}
+th {
+    background-color: #90bdeb88;
+}
+td {
+    border: 1px solid #000;
+}
+.add_btn {
+    margin: 10px;
+    width: 50%;
+    height: 30px;
+    font-size: 18px;
+    background-color: lightblue;
+    border: 0.5px solid blue;
+}
+.tittle {
+    font-size: 30px;
+}
+textarea {
+    width: 80%;
+    min-height: 200px;
+}
+#update_course {
+    margin-top: 20px;
+    width: 30%;
+    height: 30px;
+    font-size: 20px;
+}
+.department_customized {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+}
+.annotation {
+    color: lightslategrey;
+}

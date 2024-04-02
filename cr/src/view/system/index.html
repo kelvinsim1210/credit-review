@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>用戶管理</title>
+
+    <link rel="stylesheet" href="../css/default.css">
+    <link rel="stylesheet" href="index.css">
+</head>
+<body>
+    <div id="main">
+        <!-- 功能按鈕 -->
+        <div id="menu" v-if="ui!='login'">
+            <ul>
+                <li v-for="(value,key) in menu" :id="menu_now==key ? 'menu_now':''">
+                    <a :href="key==menu_now ? '':'../'+key">{{ value }}</a>
+                </li>
+            </ul>
+        </div>
+
+        <!-- 管理頁面 -->
+        <div class="main" v-if="ui=='home'">
+            <button @click="logout" style="position: absolute; right: 0;">登出</button>
+            <table id="user_list">
+                <tr>
+                    <td>賬號</td>
+                    <td>名稱</td>
+                    <td>身份</td>
+                </tr>
+                <tr>
+                    <td colspan="3"><button @click="change_ui('add_user')" id="new_user">新增</button></td>
+                </tr>
+                <tr v-for="item in data_user_list">
+                    <td>{{ item.id }}</td>
+                    <td>{{ item.name }}</td>
+                    <td>{{ item.identity }}</td>
+                </tr>
+            </table>
+        </div>
+
+        <!-- 用戶登錄 -->
+        <div class="main" v-if="ui=='login'">
+            <form @submit.prevent="login">
+                <div>
+                    <label>賬號：</label>
+                    <input type="text" v-model="data_login.id">
+                </div>
+                <div>
+                    <label>密碼：</label>
+                    <input type="password" v-model="data_login.password">
+                </div>
+                <button type="submit">登錄</button>
+            </form>
+        </div>
+
+        <!-- 新增用戶 -->
+        <div class="main" v-if="ui=='add_user'">
+            <button @click="change_ui('home')" id="go_home">返回</button>
+            <form @submit.prevent="add_user">
+                <div>
+                    <label>賬號：</label>
+                    <input type="text" v-model="data_add_user.id">
+                </div>
+                <div>
+                    <label>密碼：</label>
+                    <input type="password" v-model="data_add_user.password">
+                </div>
+                <div>
+                    <label>名稱：</label>
+                    <input type="text" v-model="data_add_user.name">
+                </div>
+                <div v-if="user_now.identity=='root'">
+                    <label>系別,編號：</label>
+                    <input type="text" v-model="data_add_user.department" :readonly="user_now.identity!='root'">
+                </div>
+                <br>
+                <button type="submit">新增</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- js -->
+    <script src="../../../node_modules/vue/dist/vue.js"></script>
+    <script src="index.js"></script>
+</body>
+</html>

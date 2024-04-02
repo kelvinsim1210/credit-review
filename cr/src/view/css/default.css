@@ -1,0 +1,51 @@
+:root {
+    --color: black;
+}
+* {
+    padding: 0;
+    margin: 0;
+}
+.main {
+    padding: 20px;
+    position: relative;
+    /* background-color: red; */
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+ul {
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    height: 50px;
+    text-align: center;
+}
+li {
+    flex-grow: 1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100%;
+    border: 1px solid #000;
+}
+a {
+    text-decoration: none;
+    color: var(--color);
+}
+input, select {
+    margin-bottom: 10px;
+    width: 200px;
+    height: 25px;
+    font-size: 16px;
+}
+button {
+    width: 100px;
+    height: 30px;
+    font-size: 20px;
+}
+hr {
+    margin: 20px 0;
+    width: 90%;
+    border: 1px solid #000;
+}

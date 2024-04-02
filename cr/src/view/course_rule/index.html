@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>課程管理</title>
+
+    <link rel="stylesheet" href="../css/default.css">
+    <link rel="stylesheet" href="index.css">
+</head>
+<body>
+    <div id="main">
+        <!-- 功能按鈕 -->
+        <div id="menu" v-if="ui!='login'">
+            <ul>
+                <li v-for="(value,key) in menu" :id="menu_now==key ? 'menu_now':''">
+                    <a :href="key==menu_now ? '':'../'+key">{{ value }}</a>
+                </li>
+            </ul>
+        </div>
+
+        <!-- 首頁 -->
+        <div class="main" id="home" v-if="ui=='home'">
+            <button @click="change_ui('edit_rule')" style="position: absolute; left: 0;">修改規則</button>
+            <button @click="logout" style="position: absolute; right: 0;">登出</button>
+            <div id="box1">
+                <h1 style="margin-bottom: 20px;">{{ user_now.department.split(",")[0] }}</h1>
+                <label for="check_year">查看學期: </label>
+                <input type="text" v-model="check_year">
+                <button @click="get_course_rule">查看</button>
+            </div>
+
+            <table class="rule" v-if="user_now.department=='電機系,23'">
+                <thead>
+                    <tr>
+                        <th colspan="2">系上學分規定</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>選修學分數</td>
+                        <td style="width: 50%;">{{ course_rule.elective }}</td>
+                    </tr>
+                    <tr>
+                        <td>自由學分數</td>
+                        <td style="width: 50%;">{{ course_rule.free }}</td>
+                    </tr>
+                </tbody>
+            </table>
+            <table class="rule">
+                <thead>
+                    <tr>
+                        <th colspan="2">通識學分規定</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>通識次領域各一門</td>
+                        <td style="width: 50%;">{{ course_rule.general.limit==true ? '是':'否' }}</td>
+                    </tr>
+                    <tr>
+                        <td>特色學分數</td>
+                        <td style="width: 50%;">{{ course_rule.general.feature }}</td>
+                    </tr>
+                    <tr>
+                        <td>自然學分數</td>
+                        <td style="width: 50%;">{{ course_rule.general.nature }}</td>
+                    </tr>
+                    <tr>
+                        <td>社會學分數</td>
+                        <td style="width: 50%;">{{ course_rule.general.society }}</td>
+                    </tr>
+                    <tr>
+                        <td>人文學分數</td>
+                        <td style="width: 50%;">{{ course_rule.general.humanities }}</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- 修改規則 -->
+        <div class="main" id="edit_rule" v-if="ui=='edit_rule'">
+            <button @click="change_ui('home')" style="position: absolute; left: 0;">返回</button>
+            <button @click="logout" style="position: absolute; right: 0;">登出</button>
+            <div id="box1">
+                <h1 style="margin-bottom: 20px;">{{ user_now.department.split(",")[0] }}</h1>
+                <label for="check_year">修正學期: </label>
+                <input type="text" v-model="check_year">
+            </div>
+
+            <!-- 電機系 -->
+            <div class="department_customized" v-if="user_now.department=='電機系,23'">    
+                <div>
+                    <label class="tittle">選修學分數</label> 
+                    <input v-model="course_rule.elective"></input>
+                </div>
+                <div>
+                    <label class="tittle">自由學分數</label> 
+                    <input v-model="course_rule.free"></input>
+                </div>
+            </div>
+
+            <!-- 通識 -->
+            <div class="department_customized">
+                <br>
+                <div>
+                    <label class="tittle">通識次領域各一門</label> 
+                    <input type="checkbox" v-model="course_rule.general.limit"></input>
+                </div>
+                <div>
+                    <label class="tittle">特色學分數</label> 
+                    <input v-model="course_rule.general.feature"></input>
+                </div>
+                <div>
+                    <label class="tittle">自然學分數</label> 
+                    <input v-model="course_rule.general.nature"></input>
+                </div>
+                <div>
+                    <label class="tittle">社會學分數</label> 
+                    <input v-model="course_rule.general.society"></input>
+                </div>
+                <div>
+                    <label class="tittle">人文學分數</label> 
+                    <input v-model="course_rule.general.humanities"></input>
+                </div>
+            </div>
+
+            <button @click="update_course_rule" id="update_course">提交</button>
+        </div>
+    </div>
+
+    <!-- js -->
+    <script src="../../../node_modules/vue/dist/vue.js"></script>
+    <script src="index.js"></script>
+    
+</body>
+</html>
